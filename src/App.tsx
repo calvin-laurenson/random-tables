@@ -52,27 +52,38 @@ const dateString = Intl.DateTimeFormat("en-US", { dateStyle: 'full', }).format(d
 const dateNum = stringToNumber(Intl.DateTimeFormat("en-US", { dateStyle: 'short', }).format(date));
 
 
-function makeTableGroups(students: string[], numGroups: number, maxGroupSize: number, random: SeededRandom): string[][] {
-  const shuffled = [...students];
-  for (let i = shuffled.length - 1; i > 0; i--) {
-    const j = Math.floor(random.next() * (i + 1));
-    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-  }
-  const groups: string[][] | null = new Array(numGroups).fill(null).map(() => []);
-  for (let i = 0; i < shuffled.length; i++) {
-    const groupIndex = i % numGroups;
-    groups[groupIndex].push(shuffled[i]);
-  }
-  for (let i = 0; i < groups.length; i++) {
-    while (groups[i].length < maxGroupSize && groups.some(g => g.length > maxGroupSize)) {
-      const groupIndex = random.next() * numGroups | 0;
-      if (groups[groupIndex].length > maxGroupSize) {
-        const studentIndex = random.next() * groups[groupIndex].length | 0;
-        groups[i].push(groups[groupIndex].splice(studentIndex, 1)[0]);
+function makeTableGroups(students: string[], numGroups: number, maxGroupSize: number, random: () => number): { groups: string[][], extraStudents: string[] } {
+  const groups: string[][] = [];
+  const extraStudents: string[] = [];
+
+  // Shuffle the students array
+  const shuffledStudents = students.sort(() => 0.5 - random());
+
+  let currentGroupIndex = 0;
+  let currentGroupSize = 0;
+
+  for (const student of shuffledStudents) {
+      if (currentGroupSize === maxGroupSize) {
+          // Move to the next group
+          currentGroupIndex++;
+          currentGroupSize = 0;
+
+          if (currentGroupIndex >= numGroups) {
+              // No more groups available, add remaining students to extraStudents
+              extraStudents.push(...shuffledStudents.slice(shuffledStudents.indexOf(student)));
+              break;
+          }
       }
-    }
+
+      if (!groups[currentGroupIndex]) {
+          groups[currentGroupIndex] = [];
+      }
+
+      groups[currentGroupIndex].push(student);
+      currentGroupSize++;
   }
-  return groups;
+
+  return { groups, extraStudents };
 }
 
 
@@ -90,7 +101,7 @@ type FormData = {
 
 function App() {
   const [loading, setLoading] = useState(true);
-  const [groups, setGroups] = useState<string[][] | null>(null);
+  const [groups, setGroups] = useState<{ groups: string[][], extraStudents: string[] } | null>(null);
   function hashChange() {
     try {
       const hash = window.location.hash.slice(1);
@@ -100,7 +111,9 @@ function App() {
       
       const config = configSchema.parse(data);
       const random = new SeededRandom(dateNum);
-      const groups = makeTableGroups(config.students, config.numGroups, config.maxGroupSize, random);
+      const groups = makeTableGroups(config.students, config.numGroups, config.maxGroupSize, () => random.next());
+      console.log(groups);
+      
       setGroups(groups);
     } catch (e) {
       setGroups(null);
@@ -143,7 +156,7 @@ function App() {
           <br />
           <table>
             <tbody>
-              {groups.map((group, i) => (
+              {groups.groups.map((group, i) => (
                 <tr key={i}>
                   <td>Group {i + 1}: </td>
                   <td style={{textAlign: "left"}}>{group.join(", ")}</td>
@@ -151,6 +164,10 @@ function App() {
               ))}
             </tbody>
           </table>
+          <br />
+          <p>
+            Extra Students: {groups.extraStudents.join(", ")}
+          </p>
         </>
       )
     } else {
