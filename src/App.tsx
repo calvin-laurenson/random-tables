@@ -90,7 +90,6 @@ type FormData = {
 
 function App() {
   const [loading, setLoading] = useState(true);
-  const [hashData, setHashData] = useState<z.infer<typeof configSchema> | null>(null);
   const [groups, setGroups] = useState<string[][] | null>(null);
   function hashChange() {
     try {
@@ -100,12 +99,10 @@ function App() {
       console.log(data);
       
       const config = configSchema.parse(data);
-      setHashData(config);
       const random = new SeededRandom(dateNum);
       const groups = makeTableGroups(config.students, config.numGroups, config.maxGroupSize, random);
       setGroups(groups);
     } catch (e) {
-      setHashData(null);
       setGroups(null);
       console.log(e);
       
