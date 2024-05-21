@@ -63,24 +63,24 @@ function makeTableGroups(students: string[], numGroups: number, maxGroupSize: nu
   let currentGroupSize = 0;
 
   for (const student of shuffledStudents) {
-      if (currentGroupSize === maxGroupSize) {
-          // Move to the next group
-          currentGroupIndex++;
-          currentGroupSize = 0;
+    if (currentGroupSize === maxGroupSize) {
+      // Move to the next group
+      currentGroupIndex++;
+      currentGroupSize = 0;
 
-          if (currentGroupIndex >= numGroups) {
-              // No more groups available, add remaining students to extraStudents
-              extraStudents.push(...shuffledStudents.slice(shuffledStudents.indexOf(student)));
-              break;
-          }
+      if (currentGroupIndex >= numGroups) {
+        // No more groups available, add remaining students to extraStudents
+        extraStudents.push(...shuffledStudents.slice(shuffledStudents.indexOf(student)));
+        break;
       }
+    }
 
-      if (!groups[currentGroupIndex]) {
-          groups[currentGroupIndex] = [];
-      }
+    if (!groups[currentGroupIndex]) {
+      groups[currentGroupIndex] = [];
+    }
 
-      groups[currentGroupIndex].push(student);
-      currentGroupSize++;
+    groups[currentGroupIndex].push(student);
+    currentGroupSize++;
   }
 
   return { groups, extraStudents };
@@ -108,17 +108,17 @@ function App() {
       const decoded = atob(hash);
       const data = JSON.parse(decoded);
       console.log(data);
-      
+
       const config = configSchema.parse(data);
       const random = new SeededRandom(dateNum);
       const groups = makeTableGroups(config.students, config.numGroups, config.maxGroupSize, () => random.next());
       console.log(groups);
-      
+
       setGroups(groups);
     } catch (e) {
       setGroups(null);
       console.log(e);
-      
+
     }
   }
 
@@ -133,7 +133,7 @@ function App() {
 
   const { register, handleSubmit } = useForm<FormData>();
   const onSubmit = (data: FormData) => {
-  
+
     const config: z.infer<typeof configSchema> = {
       students: data.students.split("\n").map(s => s.trim()).filter(s => s.length > 0),
       numGroups: parseInt(data.numGroups),
@@ -146,35 +146,35 @@ function App() {
   if (!loading) {
 
     if (groups) {
-  
-  
+
+
       return (
         <>
           {dateString}
           <br />
-  
+
           <br />
           <table>
             <tbody>
               {groups.groups.map((group, i) => (
                 <tr key={i}>
                   <td>Group {i + 1}: </td>
-                  <td style={{textAlign: "left"}}>{group.join(", ")}</td>
+                  <td style={{ textAlign: "left" }}>{group.join(", ")}</td>
                 </tr>
               ))}
             </tbody>
           </table>
           <br />
           {groups.extraStudents.length > 0 && (
-          <p>
-            Extra Students: {groups.extraStudents.join(", ")}
-          </p>
-            )}
+            <p>
+              Extra Students: {groups.extraStudents.join(", ")}
+            </p>
+          )}
         </>
       )
     } else {
-  
-      
+
+
       return (
         <form onSubmit={handleSubmit(onSubmit)}>
           <label>
@@ -187,13 +187,13 @@ function App() {
             <input type="number" {...register("numGroups")} />
           </label>
           <br />
-  
+
           <label>
             Max Group Size:
             <input type="number" {...register("maxGroupSize")} />
           </label>
           <br />
-  
+
           <button type="submit">Generate</button>
         </form>
       )
