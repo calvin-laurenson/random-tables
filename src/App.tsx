@@ -2,6 +2,29 @@ import { z } from 'zod'
 import './App.css'
 import { useEffect, useState } from 'react';
 import { useForm } from "react-hook-form"
+
+function base64ToBytes(base64: string): Uint8Array {
+  const binString = atob(base64);
+  return Uint8Array.from(binString, (m) => m.codePointAt(0) as number);
+}
+
+function bytesToBase64(bytes: Uint8Array): string {
+  const binString = Array.from(bytes, (byte) =>
+    String.fromCodePoint(byte),
+  ).join("");
+  return btoa(binString);
+}
+
+function stringToBase64(str: string): string {
+  const bytes = new TextEncoder().encode(str);
+  return bytesToBase64(bytes);
+}
+
+function base64ToString(base64: string): string {
+  const bytes = base64ToBytes(base64);
+  return new TextDecoder().decode(bytes);
+}
+
 function stringToNumber(str: string): number {
   let num = 0;
   for (let i = 0; i < str.length; i++) {
@@ -105,7 +128,7 @@ function App() {
   function hashChange() {
     try {
       const hash = window.location.hash.slice(1);
-      const decoded = atob(hash);
+      const decoded = base64ToString(hash);
       const data = JSON.parse(decoded);
       console.log(data);
 
@@ -139,7 +162,7 @@ function App() {
       numGroups: parseInt(data.numGroups),
       maxGroupSize: parseInt(data.maxGroupSize),
     }
-    const hash = btoa(JSON.stringify(config));
+    const hash = stringToBase64(JSON.stringify(config));
     window.location.hash = hash;
 
   };
