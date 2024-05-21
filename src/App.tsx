@@ -165,9 +165,11 @@ function App() {
             </tbody>
           </table>
           <br />
+          {groups.extraStudents.length > 0 && (
           <p>
             Extra Students: {groups.extraStudents.join(", ")}
           </p>
+            )}
         </>
       )
     } else {
